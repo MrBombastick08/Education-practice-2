@@ -5,8 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
     phone VARCHAR(20) NOT NULL,
     login VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
+    -- Добавлена роль 'Администратор' в CHECK constraint
     user_type VARCHAR(30) NOT NULL 
-        CHECK(user_type IN ('Менеджер', 'Специалист', 'Оператор', 'Заказчик', 'Менеджер по качеству')),
+        CHECK(user_type IN ('Менеджер', 'Специалист', 'Оператор', 'Заказчик', 'Менеджер по качеству', 'Администратор')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
