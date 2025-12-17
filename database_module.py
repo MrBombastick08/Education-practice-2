@@ -25,9 +25,11 @@ class Database:
             )
             self.connection.autocommit = True
             self.cursor = self.connection.cursor()
-            print("✅ Подключение к PostgreSQL успешно")
+            # Добавляем алиас conn для совместимости с main_app.py
+            self.conn = self.connection
+            print("Подключение к PostgreSQL успешно")
         except Error as e:
-            print(f"❌ Ошибка подключения к БД: {e}")
+            print(f"Ошибка подключения к БД: {e}")
             raise
 
     # ===================== USERS =====================
@@ -87,7 +89,7 @@ class Database:
             return None
 
         except Error as e:
-            print(f"❌ authenticate_user error: {e}")
+            print(f"authenticate_user error: {e}")
             return None
 
     def get_all_users(self) -> List[Dict]:
@@ -99,6 +101,7 @@ class Database:
         return [
             {
                 'user_id': r[0],
+                'id': r[0],  # Добавляем алиас id для совместимости
                 'fio': r[1],
                 'phone': r[2],
                 'login': r[3],
@@ -118,6 +121,7 @@ class Database:
             return False
 
     def get_specialists(self) -> List[Dict]:
+        """Получение списка специалистов"""
         self.cursor.execute("""
             SELECT user_id, fio, phone
             FROM users
@@ -128,6 +132,11 @@ class Database:
             {'user_id': r[0], 'fio': r[1], 'phone': r[2]}
             for r in self.cursor.fetchall()
         ]
+
+    # Алиас для совместимости с test_system.py
+    def get_masters(self) -> List[Dict]:
+        """Алиас для get_specialists() - для совместимости"""
+        return self.get_specialists()
 
     # ===================== REQUESTS =====================
 
@@ -160,7 +169,7 @@ class Database:
             return self.cursor.fetchone()[0]
 
         except Error as e:
-            print(f"❌ add_request error: {e}")
+            print(f"add_request error: {e}")
             return None
 
     def get_all_requests(self, status: Optional[str] = None) -> List[Dict]:
@@ -187,6 +196,7 @@ class Database:
         return [
             {
                 'request_id': r[0],
+                'id': r[0],  # Добавляем алиас id для совместимости
                 'start_date': r[1],
                 'climate_tech_type': r[2],
                 'climate_tech_model': r[3],
@@ -217,6 +227,7 @@ class Database:
 
         return {
             'request_id': r[0],
+            'id': r[0],  # Добавляем алиас id для совместимости
             'start_date': r[1],
             'climate_tech_type': r[2],
             'climate_tech_model': r[3],
@@ -239,8 +250,9 @@ class Database:
                 WHERE request_id = %s
                   AND request_status != 'Готова к выдаче'
             """, (master_id, request_id))
-            return True
-        except Error:
+            return self.cursor.rowcount > 0
+        except Error as e:
+            print(f"assign_master error: {e}")
             return False
 
     def update_request_status(self, request_id: int, new_status: str) -> bool:
@@ -274,7 +286,7 @@ class Database:
             """, (message, master_id, request_id))
             return True
         except Error as e:
-            print(f"❌ add_comment error: {e}")
+            print(f"add_comment error: {e}")
             return False
 
     def get_comments_by_request(self, request_id: int) -> List[Dict]:
@@ -324,6 +336,7 @@ class Database:
             return [
                 {
                     'request_id': r[0],
+                    'id': r[0],  # Добавляем алиас id для совместимости
                     'start_date': r[1],
                     'climate_tech_type': r[2],
                     'climate_tech_model': r[3],
@@ -337,7 +350,7 @@ class Database:
             ]
 
         except Error as e:
-            print(f"❌ search_requests error: {e}")
+            print(f"search_requests error: {e}")
             return []
 
     # ===================== STATISTICS =====================
@@ -356,12 +369,12 @@ class Database:
             stats['completed_requests'] = self.cursor.fetchone()[0]
 
             self.cursor.execute("""
-                SELECT AVG(EXTRACT(DAY FROM (completion_date - start_date)))
+                SELECT AVG(completion_date - start_date)
                 FROM requests
                 WHERE completion_date IS NOT NULL
             """)
             avg_days = self.cursor.fetchone()[0]
-            stats['avg_completion_time'] = round(avg_days, 1) if avg_days else 0
+            stats['avg_completion_time'] = round(float(avg_days), 1) if avg_days else 0
 
             self.cursor.execute("""
                 SELECT climate_tech_type, COUNT(*)
@@ -387,10 +400,10 @@ class Database:
             return stats
 
         except Error as e:
-            print(f"❌ get_statistics error: {e}")
+            print(f"get_statistics error: {e}")
             return {}
 
     def close(self):
         self.cursor.close()
         self.connection.close()
-        print("✅ Соединение с БД закрыто")
+        print("Соединение с БД закрыто")

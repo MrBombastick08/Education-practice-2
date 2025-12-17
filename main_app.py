@@ -7,10 +7,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QDate
 from PyQt6.QtGui import QFont, QIcon
-# Импорты предполагают наличие этих модулей.
-# Если их нет, код работать не будет без заглушек.
 from database_module import Database
 from qr_generator import QRCodeDialog
+
 
 class LoginWindow(QDialog):
     """Окно авторизации"""
@@ -23,7 +22,7 @@ class LoginWindow(QDialog):
         self.init_ui()
 
     def create_admin_user(self):
-        """Создание пользователя admin если его нет"""
+        """Создание пользователя admin"""
         try:
             # Проверяем, есть ли уже admin
             user = self.db.authenticate_user('admin', 'admin')
@@ -36,7 +35,6 @@ class LoginWindow(QDialog):
     def init_ui(self):
         """Инициализация интерфейса окна авторизации"""
         self.setWindowTitle('Авторизация - Система учёта заявок')
-        # ИСПРАВЛЕНИЕ 1: Увеличили высоту окна, чтобы кнопки не налезали
         self.setFixedSize(400, 520)
 
         self.setStyleSheet("""
@@ -54,13 +52,11 @@ class LoginWindow(QDialog):
                 border-radius: 5px;
                 font-size: 14px;
                 background-color: white;
-                color: black;  /* Чёрный текст ввода */
+                color: black;
             }
             QLineEdit:focus {
                 border: 2px solid #4CAF50;
             }
-
-            /* Кнопка "Глаз" */
             QPushButton#EyeBtn {
                 background-color: white;
                 border: 2px solid #ddd;
@@ -72,8 +68,6 @@ class LoginWindow(QDialog):
             QPushButton#EyeBtn:hover {
                 background-color: #e0e0e0;
             }
-
-            /* Кнопка ВХОДА */
             QPushButton#LoginBtn {
                 min-height: 50px;
                 background-color: #4CAF50;
@@ -89,8 +83,6 @@ class LoginWindow(QDialog):
             QPushButton#LoginBtn:pressed {
                 background-color: #3d8b40;
             }
-
-            /* Кнопка РЕГИСТРАЦИИ */
             QPushButton#RegBtn {
                 min-height: 50px;
                 background-color: #2196F3;
@@ -110,7 +102,7 @@ class LoginWindow(QDialog):
         layout.setContentsMargins(40, 40, 40, 40)
 
         # Заголовок
-        title = QLabel('🔐 Вход в систему')
+        title = QLabel('Вход в систему')
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont('Arial', 18, QFont.Weight.Bold))
         title.setStyleSheet("color: #4CAF50; margin-bottom: 10px;")
@@ -133,15 +125,15 @@ class LoginWindow(QDialog):
 
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText('Введите пароль')
-        self.password_input.setEchoMode(QLineEdit.EchoMode.Password) # Скрываем пароль звездочками
+        self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.returnPressed.connect(self.login)
 
         # Кнопка "Глаз"
-        self.show_pass_btn = QPushButton('👁️')
+        self.show_pass_btn = QPushButton('*')
         self.show_pass_btn.setObjectName("EyeBtn")
         self.show_pass_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.show_pass_btn.setToolTip("Показать/Скрыть пароль")
-        self.show_pass_btn.setFixedHeight(40) # Подгоняем высоту под поле ввода
+        self.show_pass_btn.setFixedHeight(40)
         self.show_pass_btn.clicked.connect(self.toggle_password_visibility)
 
         pass_layout.addWidget(self.password_input)
@@ -149,7 +141,7 @@ class LoginWindow(QDialog):
 
         layout.addLayout(pass_layout)
 
-        layout.addSpacing(20) # Отступ перед кнопками
+        layout.addSpacing(20)
 
         # Кнопка входа
         login_btn = QPushButton('Войти')
@@ -165,17 +157,17 @@ class LoginWindow(QDialog):
         register_btn.clicked.connect(self.show_register_dialog)
         layout.addWidget(register_btn)
 
-        layout.addStretch() # Прижимаем всё к верху
+        layout.addStretch()
         self.setLayout(layout)
 
     def toggle_password_visibility(self):
         """Переключение видимости пароля"""
         if self.password_input.echoMode() == QLineEdit.EchoMode.Password:
             self.password_input.setEchoMode(QLineEdit.EchoMode.Normal)
-            self.show_pass_btn.setText('🔒') # Меняем иконку на замок
+            self.show_pass_btn.setText('X')
         else:
             self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-            self.show_pass_btn.setText('👁️') # Меняем иконку обратно
+            self.show_pass_btn.setText('*')
 
     def login(self):
         login = self.login_input.text().strip()
@@ -189,7 +181,11 @@ class LoginWindow(QDialog):
 
         if user:
             self.current_user = user
-            QMessageBox.information(self, 'Успешный вход', f'Добро пожаловать, {user["fio"]}!\nРоль: {user["user_type"]}')
+            QMessageBox.information(
+                self, 
+                'Успешный вход', 
+                f'Добро пожаловать, {user["fio"]}!\nРоль: {user["user_type"]}'
+            )
             self.accept()
         else:
             QMessageBox.critical(self, 'Ошибка входа', 'Неверный логин или пароль!')
@@ -206,6 +202,7 @@ class LoginWindow(QDialog):
                 'Вы успешно зарегистрированы!\nТеперь вы можете войти в систему.'
             )
 
+
 class RegisterDialog(QDialog):
     """Диалог регистрации нового пользователя"""
 
@@ -219,13 +216,12 @@ class RegisterDialog(QDialog):
         self.setWindowTitle('Регистрация нового пользователя')
         self.setFixedSize(450, 450)
 
-        # Общий стиль для диалога
         self.setStyleSheet("""
             QLineEdit {
                 padding: 5px;
                 border: 1px solid #ccc;
                 border-radius: 3px;
-                color: black; /* Черный текст */
+                color: black;
                 background-color: white;
             }
         """)
@@ -251,7 +247,10 @@ class RegisterDialog(QDialog):
         self.password_confirm.setEchoMode(QLineEdit.EchoMode.Password)
 
         self.user_type_combo = QComboBox()
-        self.user_type_combo.addItems(['Заказчик', 'Специалист', 'Оператор', 'Менеджер', 'Менеджер по качеству', 'Администратор'])
+        self.user_type_combo.addItems([
+            'Заказчик', 'Специалист', 'Оператор', 
+            'Менеджер', 'Менеджер по качеству'
+        ])
 
         layout.addRow('ФИО:', self.fio_input)
         layout.addRow('Телефон:', self.phone_input)
@@ -310,6 +309,7 @@ class RegisterDialog(QDialog):
                 'Не удалось зарегистрировать пользователя.\nВозможно, такой логин уже существует.'
             )
 
+
 class MainWindow(QMainWindow):
     """Главное окно приложения"""
 
@@ -323,8 +323,10 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         """Инициализация главного окна"""
         role_display = 'Администратор' if self.is_admin else self.current_user["user_type"]
-        self.setWindowTitle(f'Система учёта заявок - {self.current_user["fio"]} ({role_display})')
-        self.setGeometry(1000, 1000, 1400, 800)
+        self.setWindowTitle(
+            f'Система учёта заявок - {self.current_user["fio"]} ({role_display})'
+        )
+        self.setGeometry(100, 100, 1400, 800)
 
         # Главный виджет
         main_widget = QWidget()
@@ -334,7 +336,7 @@ class MainWindow(QMainWindow):
 
         header_layout = QHBoxLayout()
 
-        header = QLabel(f'👤 {self.current_user["fio"]} | Роль: {role_display}')
+        header = QLabel(f'Пользователь: {self.current_user["fio"]} | Роль: {role_display}')
         header.setStyleSheet("""
             QLabel {
                 background-color: #4CAF50;
@@ -345,7 +347,7 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        logout_btn = QPushButton('🚪 Выйти')
+        logout_btn = QPushButton('Выйти')
         logout_btn.setStyleSheet("""
             QPushButton {
                 background-color: #f44336;
@@ -438,12 +440,12 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Заголовок
-        title = QLabel('👥 Управление пользователями')
+        title = QLabel('Управление пользователями')
         title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px; color: black;")
         layout.addWidget(title)
 
         # Кнопка обновления
-        refresh_btn = QPushButton('🔄 Обновить список')
+        refresh_btn = QPushButton('Обновить список')
         refresh_btn.clicked.connect(self.load_users)
         layout.addWidget(refresh_btn)
 
@@ -458,7 +460,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.users_table)
 
         # Кнопка удаления пользователя
-        delete_btn = QPushButton('🗑️ Удалить выбранного пользователя')
+        delete_btn = QPushButton('Удалить выбранного пользователя')
         delete_btn.setStyleSheet("""
             QPushButton {
                 background-color: #f44336;
@@ -475,35 +477,19 @@ class MainWindow(QMainWindow):
         layout.addWidget(delete_btn)
 
         tab.setLayout(layout)
-        self.tabs.addTab(tab, '👥 Пользователи')
+        self.tabs.addTab(tab, 'Пользователи')
 
         # Загрузка пользователей
         self.load_users()
 
     def load_users(self):
         """Загрузка списка пользователей"""
-        users = []
-        if hasattr(self.db, 'get_all_users'):
-            users = self.db.get_all_users()
-        else:
-            try:
-                self.db.cursor.execute("SELECT id, fio, phone, login, user_type FROM users ORDER BY id")
-                rows = self.db.cursor.fetchall()
-                for row in rows:
-                    users.append({
-                        'id': row[0],
-                        'fio': row[1],
-                        'phone': row[2],
-                        'login': row[3],
-                        'user_type': row[4]
-                    })
-            except Exception as e:
-                print(f"Ошибка загрузки пользователей: {e}")
+        users = self.db.get_all_users()
 
         self.users_table.setRowCount(len(users))
 
         for row, user in enumerate(users):
-            self.users_table.setItem(row, 0, QTableWidgetItem(str(user.get('id', ''))))
+            self.users_table.setItem(row, 0, QTableWidgetItem(str(user.get('user_id', ''))))
             self.users_table.setItem(row, 1, QTableWidgetItem(user.get('fio', '')))
             self.users_table.setItem(row, 2, QTableWidgetItem(user.get('phone', '')))
             self.users_table.setItem(row, 3, QTableWidgetItem(user.get('login', '')))
@@ -531,20 +517,11 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            try:
-                if hasattr(self.db, 'delete_user'):
-                    if self.db.delete_user(user_id):
-                        QMessageBox.information(self, 'Успех', 'Пользователь удален!')
-                        self.load_users()
-                    else:
-                        QMessageBox.critical(self, 'Ошибка', 'Не удалось удалить пользователя!')
-                else:
-                    self.db.cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
-                    self.db.conn.commit()
-                    QMessageBox.information(self, 'Успех', 'Пользователь удален!')
-                    self.load_users()
-            except Exception as e:
-                QMessageBox.critical(self, 'Ошибка', f'Не удалось удалить пользователя: {e}')
+            if self.db.delete_user(user_id):
+                QMessageBox.information(self, 'Успех', 'Пользователь удален!')
+                self.load_users()
+            else:
+                QMessageBox.critical(self, 'Ошибка', 'Не удалось удалить пользователя!')
 
     def create_requests_tab(self):
         """Вкладка со списком заявок"""
@@ -557,15 +534,17 @@ class MainWindow(QMainWindow):
         # Фильтр по статусу
         status_label = QLabel('Фильтр по статусу:')
         self.status_filter = QComboBox()
-        self.status_filter.addItems(['Все', 'Новая заявка', 'В процессе ремонта', 'Готова к выдаче'])
+        self.status_filter.addItems([
+            'Все', 'Новая заявка', 'В процессе ремонта', 'Готова к выдаче'
+        ])
         self.status_filter.currentTextChanged.connect(self.load_requests)
 
         # Поиск
         search_label = QLabel('Поиск:')
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText('Введите запрос для поиска...')
-        self.search_input.setStyleSheet("color: black; background-color: white;")  # Чёрный текст
-        search_btn = QPushButton('🔍 Найти')
+        self.search_input.setStyleSheet("color: black; background-color: white;")
+        search_btn = QPushButton('Найти')
         search_btn.clicked.connect(self.search_requests)
 
         control_panel.addWidget(status_label)
@@ -577,12 +556,12 @@ class MainWindow(QMainWindow):
 
         # Кнопка добавления заявки
         if self.is_admin or self.current_user['user_type'] in ['Заказчик', 'Оператор']:
-            add_btn = QPushButton('➕ Новая заявка')
+            add_btn = QPushButton('Новая заявка')
             add_btn.clicked.connect(self.show_add_request_dialog)
             control_panel.addWidget(add_btn)
 
         # Кнопка обновления
-        refresh_btn = QPushButton('🔄 Обновить')
+        refresh_btn = QPushButton('Обновить')
         refresh_btn.clicked.connect(self.load_requests)
         control_panel.addWidget(refresh_btn)
 
@@ -603,30 +582,30 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.requests_table)
 
         tab.setLayout(layout)
-        self.tabs.addTab(tab, '📋 Все заявки')
+        self.tabs.addTab(tab, 'Все заявки')
 
         # Загрузка данных
         self.load_requests()
 
     def create_my_requests_tab(self):
         """Вкладка с моими заявками (для заказчиков и специалистов)"""
-        if not self.is_admin and self.current_user['user_type'] not in ['Заказчик', 'Специалист']:
+        if self.is_admin or self.current_user['user_type'] not in ['Заказчик', 'Специалист']:
             return
 
         tab = QWidget()
         layout = QVBoxLayout()
 
         if self.current_user['user_type'] == 'Заказчик':
-            title = QLabel('📝 Мои заявки')
+            title = QLabel('Мои заявки')
         elif self.current_user['user_type'] == 'Специалист':
-            title = QLabel('🔧 Мои задачи')
+            title = QLabel('Мои задачи')
         else:
-            title = QLabel('📝 Все мои заявки')
+            title = QLabel('Все мои заявки')
 
         title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px;")
         layout.addWidget(title)
 
-        refresh_my_btn = QPushButton('🔄 Обновить')
+        refresh_my_btn = QPushButton('Обновить')
         refresh_my_btn.clicked.connect(self.load_my_requests)
         layout.addWidget(refresh_my_btn)
 
@@ -643,11 +622,11 @@ class MainWindow(QMainWindow):
         tab.setLayout(layout)
 
         if self.current_user['user_type'] == 'Заказчик':
-            self.tabs.addTab(tab, '📝 Мои заявки')
+            self.tabs.addTab(tab, 'Мои заявки')
         elif self.current_user['user_type'] == 'Специалист':
-            self.tabs.addTab(tab, '🔧 Мои задачи')
+            self.tabs.addTab(tab, 'Мои задачи')
         else:
-            self.tabs.addTab(tab, '📝 Мои заявки')
+            self.tabs.addTab(tab, 'Мои заявки')
 
     def load_my_requests(self):
         """Загрузка заявок текущего пользователя"""
@@ -660,7 +639,7 @@ class MainWindow(QMainWindow):
         my_requests = []
         for req in all_requests:
             if self.current_user['user_type'] == 'Заказчик':
-                # Заказчик видит свои заявки (по client_id или client_name)
+                # Заказчик видит свои заявки (по client_name)
                 if req.get('client_name') == self.current_user['fio']:
                     my_requests.append(req)
             elif self.current_user['user_type'] == 'Специалист':
@@ -678,7 +657,8 @@ class MainWindow(QMainWindow):
             self.my_requests_table.setItem(row, 1, QTableWidgetItem(str(request['start_date'])))
             self.my_requests_table.setItem(row, 2, QTableWidgetItem(request['climate_tech_type']))
             self.my_requests_table.setItem(row, 3, QTableWidgetItem(request['climate_tech_model']))
-            self.my_requests_table.setItem(row, 4, QTableWidgetItem(request['problem_description'][:50] + '...'))
+            problem_short = request['problem_description'][:50] + '...' if len(request['problem_description']) > 50 else request['problem_description']
+            self.my_requests_table.setItem(row, 4, QTableWidgetItem(problem_short))
             self.my_requests_table.setItem(row, 5, QTableWidgetItem(request['request_status']))
 
     def show_my_request_details(self):
@@ -694,17 +674,17 @@ class MainWindow(QMainWindow):
             self.load_requests()
 
     def create_statistics_tab(self):
-        """Вкладка со статистикой (ОБНОВЛЕННАЯ)"""
+        """Вкладка со статистикой"""
         tab = QWidget()
         layout = QVBoxLayout()
 
         # Заголовок
-        title = QLabel('📊 Статистика и аналитика')
-        title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px; color: black;")  # Чёрный текст
+        title = QLabel('Статистика и аналитика')
+        title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px; color: black;")
         layout.addWidget(title)
 
         # Кнопка обновления статистики
-        refresh_stats_btn = QPushButton('🔄 Обновить статистику')
+        refresh_stats_btn = QPushButton('Обновить статистику')
         refresh_stats_btn.setStyleSheet("""
             QPushButton {
                 padding: 10px;
@@ -725,14 +705,14 @@ class MainWindow(QMainWindow):
                 font-size: 14px;
                 padding: 15px;
                 background-color: #f9f9f9;
-                color: black;  /* Принудительно черный текст */
+                color: black;
                 border: 1px solid #ddd;
             }
         """)
         layout.addWidget(self.stats_text)
 
         tab.setLayout(layout)
-        self.tabs.addTab(tab, '📊 Статистика')
+        self.tabs.addTab(tab, 'Статистика')
 
         # Загрузка статистики
         self.load_statistics()
@@ -749,9 +729,10 @@ class MainWindow(QMainWindow):
 
         # Ссылка на форму опроса
         link_label = QLabel('Ссылка на форму опроса:')
-        self.link_input = QLineEdit('https://docs.google.com/forms/d/e/1FAIpQLSdhZcExx6LSIXxk0ub55mSu-WIh23WYdGG9HY5EZhLDo7P8eA/viewform?usp=sf_link')
-        self.link_input.setReadOnly(True)
-        self.link_input.setStyleSheet("color: black; background-color: #f0f0f0;")  # Чёрный текст
+        self.link_input = QLineEdit(
+            'https://docs.google.com/forms/d/e/1FAIpQLSdhZcExx6LSIXxk0ub55mSu-WIh23WYdGG9HY5EZhLDo7P8eA/viewform?usp=sf_link'
+        )
+        self.link_input.setStyleSheet("color: black; background-color: white;")
         layout.addWidget(link_label)
         layout.addWidget(self.link_input)
 
@@ -766,7 +747,8 @@ class MainWindow(QMainWindow):
 
     def show_qr_code_dialog(self):
         """Показать диалог с QR-кодом"""
-        dialog = QRCodeDialog(None, self)
+        url = self.link_input.text()
+        dialog = QRCodeDialog(None, self, url)
         dialog.exec()
 
     def load_requests(self):
@@ -783,10 +765,11 @@ class MainWindow(QMainWindow):
             self.requests_table.setItem(row, 1, QTableWidgetItem(str(request['start_date'])))
             self.requests_table.setItem(row, 2, QTableWidgetItem(request['climate_tech_type']))
             self.requests_table.setItem(row, 3, QTableWidgetItem(request['climate_tech_model']))
-            self.requests_table.setItem(row, 4, QTableWidgetItem(request['problem_description'][:50] + '...'))
+            problem_short = request['problem_description'][:50] + '...' if len(request['problem_description']) > 50 else request['problem_description']
+            self.requests_table.setItem(row, 4, QTableWidgetItem(problem_short))
             self.requests_table.setItem(row, 5, QTableWidgetItem(request['request_status']))
             self.requests_table.setItem(row, 6, QTableWidgetItem(request['client_name']))
-            self.requests_table.setItem(row, 7, QTableWidgetItem(request['master_name'] or 'Не назначен'))
+            self.requests_table.setItem(row, 7, QTableWidgetItem(request.get('master_name', '') or 'Не назначен'))
 
     def search_requests(self):
         """Поиск заявок"""
@@ -809,10 +792,11 @@ class MainWindow(QMainWindow):
             self.requests_table.setItem(row, 1, QTableWidgetItem(str(request['start_date'])))
             self.requests_table.setItem(row, 2, QTableWidgetItem(request['climate_tech_type']))
             self.requests_table.setItem(row, 3, QTableWidgetItem(request['climate_tech_model']))
-            self.requests_table.setItem(row, 4, QTableWidgetItem(request['problem_description'][:50] + '...'))
+            problem_short = request['problem_description'][:50] + '...' if len(request['problem_description']) > 50 else request['problem_description']
+            self.requests_table.setItem(row, 4, QTableWidgetItem(problem_short))
             self.requests_table.setItem(row, 5, QTableWidgetItem(request['request_status']))
             self.requests_table.setItem(row, 6, QTableWidgetItem(request['client_name']))
-            self.requests_table.setItem(row, 7, QTableWidgetItem(''))
+            self.requests_table.setItem(row, 7, QTableWidgetItem(request.get('master_name', '') or ''))
 
     def show_add_request_dialog(self):
         """Показать диалог добавления заявки"""
@@ -835,27 +819,30 @@ class MainWindow(QMainWindow):
                 self.load_my_requests()
 
     def load_statistics(self):
-        """Загрузка статистики (HTML с черным цветом)"""
+        """Загрузка статистики"""
+        if not hasattr(self, 'stats_text'):
+            return
+            
         stats = self.db.get_statistics()
 
         text = f"""
         <div style="color: black;">
-            <h2 style="color: #4CAF50;">📊 Общая статистика</h2>
+            <h2 style="color: #4CAF50;">Общая статистика</h2>
 
             <p style="color: black;"><b>Всего заявок:</b> {stats.get('total_requests', 0)}</p>
             <p style="color: black;"><b>Завершённых заявок:</b> {stats.get('completed_requests', 0)}</p>
             <p style="color: black;"><b>Среднее время выполнения:</b> {stats.get('avg_completion_time', 0):.1f} дней</p>
 
-            <h3 style="color: #2196F3;">📈 Статистика по типам оборудования:</h3>
+            <h3 style="color: #2196F3;">Статистика по типам оборудования:</h3>
         """
 
         for item in stats.get('by_tech_type', []):
-            text += f"<p style='color: black;'>• {item['type']}: <b>{item['count']}</b> заявок</p>"
+            text += f"<p style='color: black;'>- {item['type']}: <b>{item['count']}</b> заявок</p>"
 
-        text += "<h3 style='color: #FF9800;'>📊 Статистика по статусам:</h3>"
+        text += "<h3 style='color: #FF9800;'>Статистика по статусам:</h3>"
 
         for item in stats.get('by_status', []):
-            text += f"<p style='color: black;'>• {item['status']}: <b>{item['count']}</b> заявок</p>"
+            text += f"<p style='color: black;'>- {item['status']}: <b>{item['count']}</b> заявок</p>"
 
         text += "</div>"
 
@@ -866,11 +853,11 @@ class MainWindow(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout()
 
-        title = QLabel('📋 Доступные заявки (без назначенного специалиста)')
+        title = QLabel('Доступные заявки (без назначенного специалиста)')
         title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px; color: black;")
         layout.addWidget(title)
 
-        refresh_btn = QPushButton('🔄 Обновить')
+        refresh_btn = QPushButton('Обновить')
         refresh_btn.clicked.connect(self.load_available_requests)
         layout.addWidget(refresh_btn)
 
@@ -886,7 +873,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.available_requests_table)
 
         # Кнопка "Откликнуться на заявку"
-        respond_btn = QPushButton('✋ Откликнуться на заявку')
+        respond_btn = QPushButton('Откликнуться на заявку')
         respond_btn.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;
@@ -904,7 +891,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(respond_btn)
 
         tab.setLayout(layout)
-        self.tabs.addTab(tab, '📋 Доступные заявки')
+        self.tabs.addTab(tab, 'Доступные заявки')
 
         self.load_available_requests()
 
@@ -916,7 +903,10 @@ class MainWindow(QMainWindow):
         all_requests = self.db.get_all_requests(None)
 
         # Фильтруем заявки без назначенного мастера
-        available = [req for req in all_requests if not req.get('master_name') or req.get('master_name') == 'Не назначен']
+        available = [
+            req for req in all_requests 
+            if not req.get('master_name') or req.get('master_name') == 'Не назначен'
+        ]
 
         self.available_requests_table.setRowCount(len(available))
 
@@ -925,7 +915,8 @@ class MainWindow(QMainWindow):
             self.available_requests_table.setItem(row, 1, QTableWidgetItem(str(request['start_date'])))
             self.available_requests_table.setItem(row, 2, QTableWidgetItem(request['climate_tech_type']))
             self.available_requests_table.setItem(row, 3, QTableWidgetItem(request['climate_tech_model']))
-            self.available_requests_table.setItem(row, 4, QTableWidgetItem(request['problem_description'][:50] + '...'))
+            problem_short = request['problem_description'][:50] + '...' if len(request['problem_description']) > 50 else request['problem_description']
+            self.available_requests_table.setItem(row, 4, QTableWidgetItem(problem_short))
             self.available_requests_table.setItem(row, 5, QTableWidgetItem(request['request_status']))
 
     def respond_to_request(self):
@@ -945,18 +936,16 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            try:
-                self.db.cursor.execute(
-                    "UPDATE requests SET master_id = %s, request_status = 'В процессе ремонта' WHERE id = %s",
-                    (self.current_user['user_id'], request_id)
-                )
-                self.db.conn.commit()
+            # Используем метод assign_master из database_module
+            success = self.db.assign_master(request_id, self.current_user['user_id'])
+            if success:
                 QMessageBox.information(self, 'Успех', f'Вы успешно взяли заявку #{request_id} в работу!')
                 self.load_available_requests()
                 self.load_my_requests()
                 self.load_requests()
-            except Exception as e:
-                QMessageBox.critical(self, 'Ошибка', f'Не удалось взять заявку: {e}')
+            else:
+                QMessageBox.critical(self, 'Ошибка', 'Не удалось взять заявку!')
+
 
 class AddRequestDialog(QDialog):
     """Диалог добавления новой заявки"""
@@ -976,16 +965,19 @@ class AddRequestDialog(QDialog):
 
         # Поля ввода
         self.tech_type_combo = QComboBox()
-        self.tech_type_combo.addItems(['Кондиционер', 'Увлажнитель воздуха', 'Сушилка для рук', 'Вентиляция', 'Отопление'])
+        self.tech_type_combo.addItems([
+            'Кондиционер', 'Увлажнитель воздуха', 'Сушилка для рук', 
+            'Вентиляция', 'Отопление'
+        ])
 
         self.model_input = QLineEdit()
         self.model_input.setPlaceholderText('Например: Samsung AR09')
-        self.model_input.setStyleSheet("color: black; background-color: white;")  # Чёрный текст
+        self.model_input.setStyleSheet("color: black; background-color: white;")
 
         self.problem_input = QTextEdit()
         self.problem_input.setPlaceholderText('Опишите проблему подробно...')
         self.problem_input.setMaximumHeight(150)
-        self.problem_input.setStyleSheet("color: black; background-color: white;")  # Чёрный текст
+        self.problem_input.setStyleSheet("color: black; background-color: white;")
 
         layout.addRow('Тип оборудования:', self.tech_type_combo)
         layout.addRow('Модель:', self.model_input)
@@ -1029,6 +1021,7 @@ class AddRequestDialog(QDialog):
         else:
             QMessageBox.critical(self, 'Ошибка', 'Не удалось создать заявку!')
 
+
 class RequestDetailsDialog(QDialog):
     """Диалог с деталями заявки"""
 
@@ -1047,18 +1040,16 @@ class RequestDetailsDialog(QDialog):
 
         layout = QFormLayout()
 
-        try:
-            self.db.conn.rollback()
-        except:
-            pass
-
-        # вместо несуществующего метода get_request_by_id
-        all_requests = self.db.get_all_requests(None)
-        request_data = None
-        for req in all_requests:
-            if req['request_id'] == self.request_id:
-                request_data = req
-                break
+        # Получаем данные заявки через метод get_request_by_id
+        request_data = self.db.get_request_by_id(self.request_id)
+        
+        # Если метод не нашел заявку, ищем вручную
+        if not request_data:
+            all_requests = self.db.get_all_requests(None)
+            for req in all_requests:
+                if req['request_id'] == self.request_id:
+                    request_data = req
+                    break
 
         if not request_data:
             QMessageBox.warning(self, 'Ошибка', 'Заявка не найдена!')
@@ -1076,11 +1067,13 @@ class RequestDetailsDialog(QDialog):
         self.problem_text.setStyleSheet("color: black; background-color: #f0f0f0;")
 
         self.status_combo = QComboBox()
-        self.status_combo.addItems(['Новая заявка', 'В процессе ремонта', 'Готова к выдаче'])
+        self.status_combo.addItems([
+            'Новая заявка', 'В процессе ремонта', 'Готова к выдаче'
+        ])
         self.status_combo.setCurrentText(request_data.get('request_status', 'Новая заявка'))
 
         if not self.is_admin and self.current_user['user_type'] == 'Заказчик':
-             self.status_combo.setEnabled(False)
+            self.status_combo.setEnabled(False)
 
         layout.addRow('Тип:', self.type_label)
         layout.addRow('Модель:', self.model_label)
@@ -1096,37 +1089,19 @@ class RequestDetailsDialog(QDialog):
             self.master_combo = QComboBox()
             self.master_combo.addItem('Не назначен', None)
             
-            try:
-                self.db.conn.rollback()  # Очищаем прерванную транзакцию
-                
-                # Сначала пробуем user_type
-                try:
-                    self.db.cursor.execute("SELECT id, fio FROM users WHERE user_type = 'Специалист' ORDER BY fio")
-                    specialists = self.db.cursor.fetchall()
-                except:
-                    self.db.conn.rollback()
-                    # Если не сработало, пробуем type
-                    self.db.cursor.execute("SELECT id, fio FROM users WHERE type = 'Специалист' ORDER BY fio")
-                    specialists = self.db.cursor.fetchall()
-                
-                for spec in specialists:
-                    self.master_combo.addItem(spec[1], spec[0])
-                
-                # Устанавливаем текущего мастера если есть
-                current_master = request_data.get('master_name')
-                if current_master and current_master != 'Не назначен':
-                    index = self.master_combo.findText(current_master)
-                    if index >= 0:
-                        self.master_combo.setCurrentIndex(index)
-            except Exception as e:
-                print(f"Ошибка загрузки специалистов: {e}")
-                try:
-                    self.db.conn.rollback()
-                except:
-                    pass
+            # Получаем список специалистов через метод get_specialists
+            specialists = self.db.get_specialists()
+            for spec in specialists:
+                self.master_combo.addItem(spec['fio'], spec['user_id'])
+            
+            # Устанавливаем текущего мастера если есть
+            current_master = request_data.get('master_name')
+            if current_master and current_master != 'Не назначен':
+                index = self.master_combo.findText(current_master)
+                if index >= 0:
+                    self.master_combo.setCurrentIndex(index)
             
             layout.addRow('Специалист:', self.master_combo)
-
         else:
             master_label = QLabel(request_data.get('master_name', 'Не назначен') or 'Не назначен')
             layout.addRow('Мастер:', master_label)
@@ -1154,31 +1129,27 @@ class RequestDetailsDialog(QDialog):
         can_assign_master = self.is_admin or self.current_user['user_type'] in ['Менеджер', 'Оператор']
         
         try:
-            try:
-                self.db.conn.rollback()
-            except:
-                pass
-                
+            # Сначала назначаем мастера (до изменения статуса!)
             if can_assign_master and hasattr(self, 'master_combo'):
                 master_id = self.master_combo.currentData()
-                self.db.cursor.execute(
-                    "UPDATE requests SET request_status = %s, master_id = %s WHERE id = %s",
-                    (new_status, master_id, self.request_id)
-                )
-            else:
-                self.db.cursor.execute(
-                    "UPDATE requests SET request_status = %s WHERE id = %s",
-                    (new_status, self.request_id)
-                )
-            self.db.conn.commit()
+                if master_id:
+                    success = self.db.assign_master(self.request_id, master_id)
+                    if not success:
+                        QMessageBox.warning(
+                            self, 
+                            'Предупреждение', 
+                            'Не удалось назначить специалиста.\n'
+                            'Возможно, заявка уже завершена.'
+                        )
+            
+            # Потом обновляем статус
+            self.db.update_request_status(self.request_id, new_status)
+            
             QMessageBox.information(self, 'Успех', 'Заявка обновлена!')
             self.accept()
         except Exception as e:
-            try:
-                self.db.conn.rollback()
-            except:
-                pass
             QMessageBox.critical(self, 'Ошибка', f'Не удалось обновить заявку: {e}')
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
