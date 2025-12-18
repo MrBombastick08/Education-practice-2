@@ -120,6 +120,18 @@ class Database:
         except Error:
             return False
 
+    def set_user_role(self, user_id: int, new_role: str) -> bool:
+        """Установка новой роли для пользователя (только для Администратора)"""
+        try:
+            self.cursor.execute(
+                "UPDATE users SET user_type = %s WHERE user_id = %s",
+                (new_role, user_id)
+            )
+            return self.cursor.rowcount > 0
+        except Error as e:
+            print(f"set_user_role error: {e}")
+            return False
+
     def get_specialists(self) -> List[Dict]:
         """Получение списка специалистов"""
         self.cursor.execute("""
