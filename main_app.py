@@ -129,7 +129,7 @@ class LoginWindow(QDialog):
         self.password_input.returnPressed.connect(self.login)
 
         # Кнопка "Глаз"
-        self.show_pass_btn = QPushButton('*')
+        self.show_pass_btn = QPushButton('🔒')
         self.show_pass_btn.setObjectName("EyeBtn")
         self.show_pass_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.show_pass_btn.setToolTip("Показать/Скрыть пароль")
@@ -164,10 +164,10 @@ class LoginWindow(QDialog):
         """Переключение видимости пароля"""
         if self.password_input.echoMode() == QLineEdit.EchoMode.Password:
             self.password_input.setEchoMode(QLineEdit.EchoMode.Normal)
-            self.show_pass_btn.setText('X')
+            self.show_pass_btn.setText('🔓')
         else:
             self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-            self.show_pass_btn.setText('*')
+            self.show_pass_btn.setText('🔒')
 
     def login(self):
         login = self.login_input.text().strip()
@@ -246,18 +246,14 @@ class RegisterDialog(QDialog):
         self.password_confirm = QLineEdit()
         self.password_confirm.setEchoMode(QLineEdit.EchoMode.Password)
 
-        self.user_type_combo = QComboBox()
-        self.user_type_combo.addItems([
-            'Заказчик', 'Специалист', 'Оператор', 
-            'Менеджер', 'Менеджер по качеству'
-        ])
+        
 
         layout.addRow('ФИО:', self.fio_input)
         layout.addRow('Телефон:', self.phone_input)
         layout.addRow('Логин:', self.login_input)
         layout.addRow('Пароль:', self.password_input)
         layout.addRow('Подтверждение:', self.password_confirm)
-        layout.addRow('Роль:', self.user_type_combo)
+        
 
         # Кнопки
         btn_layout = QHBoxLayout()
@@ -282,7 +278,7 @@ class RegisterDialog(QDialog):
         login = self.login_input.text().strip()
         password = self.password_input.text()
         password_confirm = self.password_confirm.text()
-        user_type = self.user_type_combo.currentText()
+        user_type = 'Заказчик'
 
         # Валидация
         if not all([fio, phone, login, password]):
@@ -451,8 +447,8 @@ class MainWindow(QMainWindow):
 
         # Таблица пользователей
         self.users_table = QTableWidget()
-        self.users_table.setColumnCount(5)
-        self.users_table.setHorizontalHeaderLabels(['ID', 'ФИО', 'Телефон', 'Логин', 'Роль'])
+        self.users_table.setColumnCount(6)
+        self.users_table.setHorizontalHeaderLabels(['ID', 'ФИО', 'Телефон', 'Логин', 'Роль', 'Действие'])
         self.users_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.users_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.users_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -489,11 +485,42 @@ class MainWindow(QMainWindow):
         self.users_table.setRowCount(len(users))
 
         for row, user in enumerate(users):
-            self.users_table.setItem(row, 0, QTableWidgetItem(str(user.get('user_id', ''))))
+            user_id = str(user.get('user_id', ''))
+            user_type = user.get('user_type', '')
+            
+            self.users_table.setItem(row, 0, QTableWidgetItem(user_id))
             self.users_table.setItem(row, 1, QTableWidgetItem(user.get('fio', '')))
             self.users_table.setItem(row, 2, QTableWidgetItem(user.get('phone', '')))
             self.users_table.setItem(row, 3, QTableWidgetItem(user.get('login', '')))
-            self.users_table.setItem(row, 4, QTableWidgetItem(user.get('user_type', '')))
+            self.users_table.setItem(row, 4, QTableWidgetItem(user_type))
+
+            # Добавляем QComboBox для смены роли
+            role_combo = QComboBox()
+            role_combo.addItems([
+                'Заказчик', 'Специалист', 'Оператор', 
+                'Менеджер', 'Менеджер по качеству'
+            ])
+            role_combo.setCurrentText(user_type)
+            role_combo.setProperty('user_id', user_id)
+            role_combo.currentTextChanged.connect(self.change_user_role)
+            
+            # Отключаем возможность смены роли для самого себя и админа
+            if user_id == str(self.current_user['user_id']) or user.get('login') == 'admin':
+                role_combo.setEnabled(False)
+
+            self.users_table.setCellWidget(row, 5, role_combo)
+
+    def change_user_role(self, new_role):
+        """Смена роли пользователя через QComboBox"""
+        combo = self.sender()
+        user_id = int(combo.property('user_id'))
+        
+        if self.db.set_user_role(user_id, new_role):
+            QMessageBox.information(self, 'Успех', f'Роль пользователя ID {user_id} изменена на "{new_role}"!')
+        else:
+            QMessageBox.critical(self, 'Ошибка', 'Не удалось изменить роль пользователя!')
+            # Перезагружаем список, чтобы вернуть старое значение в комбобоксе
+            self.load_users()
 
     def delete_user(self):
         """Удаление пользователя"""
@@ -688,10 +715,18 @@ class MainWindow(QMainWindow):
         refresh_stats_btn.setStyleSheet("""
             QPushButton {
                 padding: 10px;
-                background-color: #2196F3;
+                background-color: #2196F3; /* Синий */
                 color: white;
                 font-weight: bold;
                 border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #1976D2; /* Темнее синий при наведении */
+            }
+            QPushButton:pressed {
+                background-color: #0D47A1; /* Еще темнее синий при нажатии */
+                padding-top: 12px; /* Эффект "прожимания" */
+                padding-bottom: 8px;
             }
         """)
         refresh_stats_btn.clicked.connect(self.load_statistics)
